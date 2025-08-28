@@ -1,0 +1,73 @@
+---
+- name: Lab Minutes Ansible - Create VLAN
+  hosts: leaf
+  gather_facts: true
+  vars:
+    ansible_connection: ansible.netcommon.httpapi
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_network_os: cisco.nxos.nxos
+    ansible_user: admin
+    ansible_password: cisco
+  
+  tasks:
+  - name: Load vars
+    ansible.builtin.include_vars:
+      file: config.yml
+
+  - name: Create VLAN
+    cisco.nxos.nxos_vlans:
+      config:
+      - vlan_id: "{{ item.1.id }}"
+        name: "{{ item.1.name }}"
+        mapped_vni: "{{ item.1.l2vni }}"
+      state: merged  
+    loop: "{{ lookup('subelements', vrf, 'vlans') }}"
+
+  - name: Add L2VNI 
+    cisco.nxos.nxos_vxlan_vtep_vni:
+      interface: nve1
+      vni: "{{ item.1.l2vni }}"
+      multicast_group : "239.0.0.{{ item.1.id }}"
+      state: present
+    loop: "{{ lookup('subelements', vrf, 'vlans') }}"
+
+  - name: Create SVI
+    cisco.nxos.nxos_interfaces:
+      config: 
+      - name: "Vlan{{ item.1.id }}"
+        description: "*** {{ item.1.name }} ***"
+        enabled: true
+        mtu: "9216"
+      state: merged
+    loop: "{{ lookup('subelements', vrf, 'vlans') }}"  
+
+  - name: Add SVI to VRF
+    cisco.nxos.nxos_vrf_interface:
+      vrf: "{{ item.0.name}}"
+      interface: "Vlan{{ item.1.id }}"
+      state: present
+    loop: "{{ lookup('subelements', vrf, 'vlans') }}"
+
+  - name: Set SVI IP manually as CLI commands
+    vars:
+      ansible_connection: ansible.netcommon.network_cli
+      ansible_ssh_host_key_checking: false
+    cisco.nxos.nxos_command:
+      commands:
+      - "config t"
+      - "interface Vlan{{ item.1.id }}"
+      - "ip address 172.16.{{ item.1.id }}.1/24"
+      - "no ip redirects"
+    loop: "{{ lookup('subelements', vrf, 'vlans') }}"
+
+  - name: Enable Anycast GW
+    cisco.nxos.nxos_interfaces:
+      config: 
+      - name: "Vlan{{ item.1.id }}"
+        fabric_forwarding_anycast_gateway: true
+      state: merged
+    loop: "{{ lookup('subelements', vrf, 'vlans') }}" 
+   
+  
+

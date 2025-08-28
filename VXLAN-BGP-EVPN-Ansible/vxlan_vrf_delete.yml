@@ -1,0 +1,44 @@
+---
+- name: Lab Minutes Ansible - Delete VRF
+  hosts: leaf
+  gather_facts: false
+  vars:
+    ansible_connection: ansible.netcommon.httpapi
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_network_os: cisco.nxos.nxos
+    ansible_user: admin
+    ansible_password: cisco
+  
+  tasks:
+  - name: Load vars
+    ansible.builtin.include_vars:
+      file: config.yml
+
+  # Use CLI
+  - name: Delete VRF in BGP (CLI)
+    vars:
+      ansible_connection: ansible.netcommon.network_cli
+      ansible_ssh_host_key_checking: false
+    cisco.nxos.nxos_command:
+      commands:
+        - "config t"
+        - "router bgp 65000"
+        - "no vrf {{ vrf['name'] }}"
+
+  # Use NX-API  
+  - name: Delete L3VNI 
+    cisco.nxos.nxos_vxlan_vtep_vni:
+      interface: nve1
+      vni: "{{ vrf['l3vni'] }}"
+      state: absent
+
+  - name: Delete VRF
+    cisco.nxos.nxos_vrf:
+      name: "{{ vrf['name'] }}"
+      state: absent    
+     
+
+
+
+    

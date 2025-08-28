@@ -1,0 +1,25 @@
+###########################
+#
+#    NX-OS VXLAN Config
+#
+###########################
+
+# VRF
+vrf:
+  - name: Prod
+    l3vni: 30910
+    vlans:
+    - name: App
+      id: 10
+      l2vni: 20010
+    - name: Wev
+      id: 20
+      l2vni: 20020
+
+  - name: Dev
+    l3vni: 30930
+    vlans:
+    - name: Db
+      id: 30
+      l2vni: 20030
+

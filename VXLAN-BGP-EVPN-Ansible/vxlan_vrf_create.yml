@@ -1,0 +1,55 @@
+---
+- name: Lab Minutes Ansible - Create VRF
+  hosts: leaf
+  gather_facts: false
+  vars:
+    ansible_connection: ansible.netcommon.httpapi
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_network_os: cisco.nxos.nxos
+    ansible_user: admin
+    ansible_password: cisco
+  
+  tasks:
+  - name: Load vars
+    ansible.builtin.include_vars:
+      file: config.yml
+
+  # Use CLI
+  - name: Create VRF (CLI)
+    vars:
+      ansible_connection: ansible.netcommon.network_cli
+      ansible_ssh_host_key_checking: false
+    cisco.nxos.nxos_command:
+      commands:
+        - "config t"
+        - "vrf context {{ item.name}}"
+        - "vni {{ item.l3vni}}"
+    loop: "{{ vrf  }}"
+  
+  # Use NX-API  
+  - name: Add L3VNI 
+    cisco.nxos.nxos_vxlan_vtep_vni:
+      interface: "nve1"
+      vni: "{{item.l3vni }}"
+      assoc_vrf: true
+      state: present
+    loop: "{{ vrf }}"
+
+  - name: Add BGP VRF
+    cisco.nxos.nxos_bgp_address_family:
+      config:
+        as_number: "65000"
+        address_family:
+          - afi: "ipv4"
+            safi: "unicast"
+            vrf: "{{item.name }}"
+            maximum_paths:
+              ibgp:
+                parallel_paths: 8
+            redistribute:
+              - protocol: "direct"
+                route_map: "ANY"
+      state: merged
+    loop: "{{ vrf  }}" 
+

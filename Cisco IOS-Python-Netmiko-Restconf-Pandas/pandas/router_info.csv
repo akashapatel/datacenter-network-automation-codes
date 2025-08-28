@@ -1,0 +1,2 @@
+ip,username,password,port,device_type
+10.254.0.1,cisco,cisco,22,cisco_ios

@@ -1,0 +1,36 @@
+- name: Test L3 interface IP config
+  hosts: leaf
+  gather_facts: false
+  vars:
+    ansible_connection: ansible.netcommon.httpapi
+    ansible_network_os: cisco.nxos.nxos
+    ansible_user: admin
+    ansible_password: cisco
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+ 
+  tasks:
+  - name: Load vars
+    ansible.builtin.include_vars:
+      file: config.yml
+
+  - name: Create VLAN
+    cisco.nxos.nxos_vlans:
+      config:
+      - vlan_id: "{{ item.id }}"
+        name: "{{ item.name }}"
+        mapped_vni: "{{ item.l2vni }}"
+      state: merged  
+    loop: "{{ vlan }}"
+
+  - name: Set SVI IP manually as CLI commands
+    vars:
+      ansible_connection: ansible.netcommon.network_cli
+      ansible_ssh_host_key_checking: false
+    cisco.nxos.nxos_command:
+      commands:
+      - "config t"
+      - "interface Vlan{{ item.id }}"
+      - "ip address 172.16.{{ item.id }}.1/24"
+      - "no ip redirects"
+    loop: "{{ vlan }}"

@@ -1,0 +1,37 @@
+---
+- name: Lab Minutes Ansible - Delete VLAN
+  hosts: leaf
+  gather_facts: false
+  vars:
+    ansible_connection: ansible.netcommon.httpapi
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_network_os: cisco.nxos.nxos
+    ansible_user: admin
+    ansible_password: cisco
+  
+  tasks:
+  - name: Load vars
+    ansible.builtin.include_vars:
+      file: config.yml
+
+  - name: Delete SVI
+    cisco.nxos.nxos_interfaces:
+      config: 
+      - name: "Vlan{{ item.id }}"
+      state: purged
+    loop: "{{ vlan }}"   
+
+  - name: Delete L2VNI 
+    cisco.nxos.nxos_vxlan_vtep_vni:
+      interface: nve1
+      vni: "{{ item.l2vni }}"
+      state: absent
+    loop: "{{ vlan }}"
+    
+  - name: Delete VLAN
+    cisco.nxos.nxos_vlans:
+      config:
+      - vlan_id: "{{ item.id }}"
+      state: deleted  
+    loop: "{{ vlan }}"

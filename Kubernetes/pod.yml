@@ -1,0 +1,14 @@
+# comment
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels: 
+    env: demo
+    type: frontend
+spec:
+  containers: 
+  - name: nginx-container
+    image: nginx12
+    ports:
+    - containerPort: 80
