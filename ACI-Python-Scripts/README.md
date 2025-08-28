@@ -1,76 +1,115 @@
+# Cisco ACI Automation with ARYA, Cobra SDK, and Python
 
+This project demonstrates how I automated Cisco ACI fabric configurations by leveraging the **Cisco ARYA toolkit**, **Cobra SDK**, and Python scripting.  
+The automation uses **CSV files** as input to add, remove, or update ACI objects dynamically. Each Python script processes one line at a time from CSV and applies changes to the ACI fabric.
 
-I have used Cisco ACI automation by leveraging Cisco ARYA toolkit, Cobra Framework using Python.  I have used CSV files to add/remove/updates all ACI objects by using Python logic; created loop to read one line at a time from CSV for various scripts to update different ACI objects.
+---
 
-These are the steps I have used
+## 🚀 Key Highlights
+- Automated ACI object creation and updates with Python.
+- Used **CSV files** to simplify repetitive tasks:
+  - Interfaces  
+  - Switches  
+  - VPC Pairs  
+  - EPG bindings  
+- Scripts loop through CSV rows and apply changes using the Cobra SDK.
+- Credentials handled securely by prompting for APIC password (no hardcoding).
+- Enabled easy troubleshooting and verification after updates.
 
-1.  Install ACICobra and ÅÇIModel Python WHL files
+---
 
+## 🛠️ Setup Instructions
 
-2 
-ARYA
-arya is a tool that will convert APIC object documents from their XML or JSON
-form into the equivalent Python code leveraging the Cobra SDK.
+### 1️⃣ Install Cobra SDK and ACI Model WHL files
+Download and install the required Python wheels provided by Cisco for Cobra and ACIModel.
 
-Python 3.7+
-Recommended:
+```bash
+pip install acicobra-*.whl
+pip install acimodel-*.whl
+```
 
-Git (to install from github)
+### 2️⃣ Install and Configure ARYA
+[ARYA](https://github.com/datacenter/arya) converts APIC object XML/JSON documents into Python code using the Cobra SDK.
 
+**Requirements:**  
+- Python **3.7+** recommended  
+- Git installed  
 
-If you have git installed clone the repository
-
+**Clone the repo and install:**
+```bash
 git clone https://github.com/datacenter/arya.git
-Install following the instructions below.
-
-
 cd arya
-Run the setup script
-
 python setup.py install
-Check that arya can be run from the command line
+```
 
-$ arya.py
+**Verify installation:**
+```bash
+arya.py -h
+```
 
-usage: Code generator for APIC cobra SDK [-h] [-f FILEIN] [-s] [-d SOURCEDIR]
-                                         [-t TARGETDIR] [-i IP] [-u USERNAME]
-                                         [-p PASSWORD] [-nc] [-b]
+Expected usage output:
+```
+usage: Code generator for APIC cobra SDK [-h] [-f FILEIN] [-s] [-d SOURCEDIR] [-t TARGETDIR] [-i IP] [-u USERNAME] [-p PASSWORD] [-nc] [-b]
+```
 
-optional arguments:
-  -h, --help            show this help message and exit
-  -f FILEIN, --filein FILEIN
-                        Document containing post to be sent to REST API
-  -s, --stdin           Parse input from stdin, for use as a filter, e.g., cat
-                        doc.xml | arya.py -s
-  -d SOURCEDIR, --sourcedir SOURCEDIR
-                        Specify a source directory containing ACI object files
-                        you want to convert to python.
-  -t TARGETDIR, --targetdir TARGETDIR
-                        Where to write the .py files that come from the -d
-                        directory. If none is specified, it will default to
-                        SOURCEDIR
-  -i IP, --ip IP        IP address of APIC to be pre-populated
-  -u USERNAME, --username USERNAME
-                        Username for APIC account to be pre-populated in
-                        generated code
-  -p PASSWORD, --password PASSWORD
-                        Password for APIC account to be pre-populated in
-                        generated code
-  -nc, --nocommit       Generate code without final commit to changes
-  -b, --brief           Generate brief code (without headers, comments, etc)
-                          Password for admin account on API
+---
 
+### 3️⃣ Export ACI Objects
+- Save sample objects from ACI as **XML configuration files**.  
+- Use ARYA with ACI credentials and convert XML into Python scripts:
+```bash
+arya.py -f sample_config.xml -i <APIC_IP> -u <username> -p <password>
+```
 
+---
 
+### 4️⃣ Clean and Enhance Generated Scripts
+- Remove boilerplate (URL warnings, ASCII setup, etc.).  
+- Insert logic to:
+  - **Read CSV files** for object data.  
+  - **Prompt securely** for passwords instead of hardcoding.  
 
-3.  Save sample objects from ACI, all XML configuration objects- including subjects
+---
 
-run this XML file using ARYA and ACI credentials as highlighted in 2nd steps and create python file by using -f
+### 5️⃣ Use CSV Files for Object Management
+Maintain CSV files for different object types (examples):
+- `interfaces.csv`  
+- `switches.csv`  
+- `vpc_pairs.csv`  
+- `epg_bindings.csv`  
 
-4. clean the python file (disable URL warning, ASCII code setup etc.), insert CSV logic, prompt for password, instead of running the password in clear text
+Each script loops through CSV rows and applies corresponding ACI changes.
 
-5. update the CSV files for various objects, such as Interface, Switches, VPC pair, EPG binding etc
+---
 
-6. run the corresponding scripts, troubleshoot as needed and then verify that in ACI
+### 6️⃣ Run Automation Scripts
+- Execute the Python scripts against APIC.  
+- Monitor logs and output for troubleshooting.  
+- Verify changes in the ACI fabric (via GUI or API).
 
+---
 
+## 📂 Example Workflow
+1. Export ACI EPG config as XML.  
+2. Convert to Python using ARYA.  
+3. Clean up generated script and insert CSV logic.  
+4. Prepare `epg_bindings.csv` with desired bindings.  
+5. Run script:
+   ```bash
+   python update_epg_bindings.py
+   ```
+6. Validate in ACI GUI.
+
+---
+
+## ✅ Benefits
+- **Scalable:** Add more CSVs and scripts for additional ACI objects.  
+- **Repeatable:** Same workflow can be reused across fabrics.  
+- **Secure:** Avoids storing APIC passwords in code.  
+- **Efficient:** No manual repetitive CLI/GUIs — all objects managed programmatically.  
+
+---
+
+## 📌 References
+- [Cisco ARYA on GitHub](https://github.com/datacenter/arya)  
+- [Cisco ACI Cobra SDK Documentation](https://developer.cisco.com/site/apic-mim-ref-api/)  
